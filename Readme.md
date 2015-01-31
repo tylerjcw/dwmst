@@ -41,6 +41,7 @@ Usage
 				  by default there is 1 second between updates.
 
 dwmst only outputs formatted text on stdout, nothing more. It is up to you to decide what to do with it. I have the output formatted for dzen2, so to display my bar i have something like this to my .xinitrc:
+
 	dwmst | dzen2 -x 656 -y 742 -fg '#dcdcdc' -bg '#303030' -h 26 -w 367 -ta r -fn '-*-bitocra-*-*-*-*-*-*-*-*-*-*-*-*' &
 
 you could just as easily reformat the output to be more friendly with any other bar that accepts input on stdin. 
