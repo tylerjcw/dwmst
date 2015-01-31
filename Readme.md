@@ -27,7 +27,7 @@ The clickable areas include:
 - Clicking time: displays a dzen calendar with current day and holidays highlighted
 - Clicking dwm icon: displays a dzen menu with a list of applications
 
-![Screenshot of calendar][calendar] ![Screenshot of sysinfo][sysinfo]
+![Screenshot of calendar][calendar]
 
 Usage
 -----
