@@ -58,7 +58,7 @@ display_usage()
     printf("  -h,       display this help and exit\n");
     printf("  -v,       display version information and exit\n");
     printf("  -r <int>, run int amount of times and exit, turned off by default\n");
-    printf("            this argument must be an int > 0 (useful for debug)");
+    printf("            this argument must be an int > 0 (useful for debug)\n");
     printf("  -i <int>, set the interval (in seconds) of how often dwmst should refresh\n");
     printf("            by default there is 1 second between updates, must be an int >= 0\n");
     exit(0);
@@ -225,15 +225,10 @@ main(int argc, char *argv[])
 				break;
 			case 'r':
 				run_times = strtol(optarg, NULL, 10);
-				switch( run_times )
-				{
-					case 0:
-						display_usage();
-						break;
-					default:
-						print_status();
-						break;
-				}
+				if( run_times > 0)
+					print_status();
+				else
+					display_usage();
 				break;
 			case '?':
 				display_usage();
