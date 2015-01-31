@@ -40,7 +40,7 @@ Usage
 		-i <arg>, set the interval (in seconds) of how often dwmst should refresh
 				  by default there is 1 second between updates.
 
-dwmst only outputs formatted text on stdout, nothing more. It is up to you to decide what to do with it. I have the output formatted for dzen2, so to display my bar i have something like this to my .xinitrc:
+dwmst only outputs formatted text on stdout, nothing more. It is up to you to decide what to do with it. I have the output formatted for dzen2, so to display my bar i have something like this in my .xinitrc:
 
 	dwmst | dzen2 -x 656 -y 742 -fg '#dcdcdc' -bg '#303030' -h 26 -w 367 -ta r -fn '-*-bitocra-*-*-*-*-*-*-*-*-*-*-*-*' &
 
