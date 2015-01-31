@@ -2,8 +2,6 @@
 
 dwmst - DWM Status(bar)
 
-![Screenshot of dwmst piped to dzne2][dwmstShot]
-
 Introduction
 ------------
 dwmst is a status line program for DWM (although it could really be used with any WM) inspired by Unia's [dwmst][], which in turn was inspired by TrilbyWite's [dwmStatus][]. As opposed to their statusbars, mine is formatted for dzen2 output, and displays slightly different information. Hardcoded means it is written for my machine, and will most likely not work on yours without a decent number of modifications.
@@ -26,5 +24,3 @@ The clickable areas include:
 - Clicking volume: spawns pavucontrol
 - Clicking time: displays a dzen calendar with current day and holidays highlighted
 - Clicking dwm icon: displays a dzen menu with a list of applications
-
-[dwmstShot]: dwmst.png
