@@ -23,8 +23,9 @@ double interval = 1;
 
 // if true, runs once and exits. If you want to change the default behavior,
 // change this here, otherwise use 'dwmst -o'
-bool run_once = false;
+long int run_times = -1;
 
+// used to safely return strings in a formatted manner
 char *
 smprintf(char *fmt, ...)
 {
@@ -49,18 +50,21 @@ smprintf(char *fmt, ...)
 	return ret;
 }
 
+// display program usage
 void
 display_usage()
 {
     printf("usage: dwmst [OPTION]\n");
     printf("  -h,       display this help and exit\n");
     printf("  -v,       display version information and exit\n");
-    printf("  -o,       run once and exit, turned off by default (useful for debug)\n");
-    printf("  -i <arg>, set the interval (in seconds) of how often dwmst should refresh\n");
-    printf("            by default there is 1 second between updates.");
+    printf("  -r <int>, run once and exit, turned off by default (useful for debug)\n");
+    printf("            this argument must be an int > 0");
+    printf("  -i <int>, set the interval (in seconds) of how often dwmst should refresh\n");
+    printf("            by default there is 1 second between updates, must be an int >= 0\n");
     exit(0);
 }
 
+// display general program info & version
 void
 display_version()
 {
@@ -70,7 +74,7 @@ display_version()
     exit(0);
 }
 
-/* safely spawns a shell command and returns it's output
+/* safely spawns a shell command and returns it's output.
    currently not used for anything, could be used like so:
        char *curtime = SHCMD("date +'%I:%M%P'");
        char *kernel  = SHCMD("uname -r");
@@ -84,13 +88,7 @@ SHCMD(char *cmd)
 	fscanf(process, "%[^\n]", buffer);
 	pclose(process);
 
-	int sz = strlen(buffer) + 1;
-	char *output = malloc(sz);
-	memset(output, 0, sizeof(output));
-	strncpy(output, buffer, sz);
-	strstr(output, "\n");
-
-	return output;
+	return smprintf(buffer);
 }
 
 /* Reads UPDATE_FILE to retrieve number of pacman updates.
@@ -103,17 +101,9 @@ char *
 get_updates()
 {
 	FILE* infile = fopen(UPDATE_FILE, "r");
-	//char updates[4];
 	int number;
-	//fscanf(infile, "%[^\n]", updates);
 	fscanf(infile, "%i", &number);
 	fclose(infile);
-
-	//int sz = strlen(updates);
-	//char *output = malloc(sz);
-	//memset(output, 0, sizeof(output));
-	//strncpy(output, updates, sz);
-	//strstr(output, "\n");
 
 	return smprintf(number == 0 ? PAC_NONE : PAC_UPDS, number);
 }
@@ -136,7 +126,7 @@ get_vol(snd_mixer_t *handle, snd_mixer_elem_t *elem) {
 
 // returns current system time in the format specified by CLK
 char *
-current_time()
+get_time()
 {
 	char clock[38];
 	time_t current;
@@ -150,18 +140,11 @@ current_time()
 
 // returns kernel version number, same as 'uname -r'
 char *
-kernel_version()
+get_kernel()
 {
 	struct utsname retval;
 	uname(&retval);
 	
-	//int sz = strlen(retval.release) + 1;
-	//char *output = malloc(sz);
-	//memset(output, 0, sizeof(output));
-	//strncpy(output, retval.release, sz);
-	//strstr(output, "\n");
-
-    //return output;
     return smprintf(KERNEL, retval.release);
 }
 
@@ -169,6 +152,8 @@ kernel_version()
 void
 print_status()
 {
+	int times_ran = 0;
+
 	// set up the alsa mixer
 	snd_mixer_t* handle;
 	snd_mixer_elem_t* elem;
@@ -191,21 +176,26 @@ print_status()
 	}
 
 	// status loop, executed [interval] seconds
-	for(;;sleep(interval))
+	while (true)
 	{
 		//print status
-		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)%s ^ca()", kernel_version());
+		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)%s ^ca()", get_kernel());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh) %s ^ca()", get_updates());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol(handle, elem));
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh) ^fg(#6095C5)^fn(stlarch)^fn()^fg()%s ^ca()", current_time());
+		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh) ^fg(#6095C5)^fn(stlarch)^fn()^fg()%s ^ca()", get_time());
 		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,/home/komrade/etc/dwm/menu.sh) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
 		fflush(stdout);
 
-		/* if it was specified to only run once (using the '-o' option)
-		   then exit this loop now
+		/* increment the number of times the loop has ran by 1, if
+		   this value is exactly equal to the specified number of times to run
+		   (default is -1, or infinite times) then break the loop. If it is not, then
+		   sleep for the specified interval, and run the loop again
 		*/
-		if (run_once)
+		times_ran++;
+		if (times_ran == run_times)
 			break;
+		else
+			sleep(interval);
 	}
 
 	// clean up the alsa mixer
@@ -219,7 +209,7 @@ main(int argc, char *argv[])
 {
 	int c;
 
-	if ((c = getopt(argc, argv, "hvoi:")) != 4)
+	if ((c = getopt(argc, argv, "hvr:i:")) != 4)
 	{
 		switch( c )
 		{
@@ -233,9 +223,20 @@ main(int argc, char *argv[])
 				interval = strtod(optarg, NULL);
 				print_status();
 				break;
-			case 'o':
-				run_once = true;
-				print_status();
+			case 'r':
+				run_times = strtol(optarg, NULL, 10);
+				switch( run_times )
+				{
+					case 0:
+						display_usage();
+						break;
+					default:
+						print_status();
+						break;
+				}
+				break;
+			case '?':
+				display_usage();
 				break;
 			default:
 				print_status();
