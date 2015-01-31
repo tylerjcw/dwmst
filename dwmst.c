@@ -57,8 +57,8 @@ display_usage()
     printf("usage: dwmst [OPTION]\n");
     printf("  -h,       display this help and exit\n");
     printf("  -v,       display version information and exit\n");
-    printf("  -r <int>, run once and exit, turned off by default (useful for debug)\n");
-    printf("            this argument must be an int > 0");
+    printf("  -r <int>, run int amount of times and exit, turned off by default\n");
+    printf("            this argument must be an int > 0 (useful for debug)");
     printf("  -i <int>, set the interval (in seconds) of how often dwmst should refresh\n");
     printf("            by default there is 1 second between updates, must be an int >= 0\n");
     exit(0);
