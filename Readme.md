@@ -11,6 +11,18 @@ dwmst is a status line program for DWM (although it could really be used with an
 [dwmst]: https://github.com/Unia/dwmst
 [dwmStatus]: https://github.com/TrilbyWhite/dwmStatus
 
+Installation
+------------
+The following dependencies are required to compile this:
+- alsa-lib
+
+To build and install this program run this:
+
+	$ make
+	$ make install clean
+
+By default the executable is installed to $HOME/bin, you can change this in the makefile. I would recommend keeping the source code to this program after installation, as if you want to reconfigure it, this is the only way.
+
 Information Displayed
 ---------------------
 - Kernel release version (uname -r)
