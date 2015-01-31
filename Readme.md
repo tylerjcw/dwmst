@@ -16,7 +16,7 @@ Installation
 The following dependencies are required to compile this:
 - alsa-lib
 
-To build and install this program run this:
+To build and install this program run this in the directory you cloned the repository to:
 
 	$ make
 	$ make install clean
