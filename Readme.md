@@ -6,7 +6,7 @@ dwmst - DWM Status(bar)
 
 Introduction
 ------------
-dwmst is a status line program for DWM (although it could really be used with any WM) inspired by Unia's [dwmst][], which in turn was inspired by TrilbyWite's [dwmStatus][]. As opposed to their statusbars, mine is formatted for dzen2 output, and displays slightly different information. Hardcoded means it is written for my machine, and will most likely not work on yours without a decent number of modifications.
+dwmst is a status line program for DWM (although it could really be used with any WM) inspired by Unia's [dwmst][], which in turn was inspired by TrilbyWhite's [dwmStatus][]. As opposed to their statusbars, mine is formatted for dzen2 output, and displays slightly different information. Hardcoded means it is written for my machine, and will most likely not work on yours without a decent number of modifications.
 
 [dwmst]: https://github.com/Unia/dwmst
 [dwmStatus]: https://github.com/TrilbyWhite/dwmStatus
