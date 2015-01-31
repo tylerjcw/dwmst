@@ -67,7 +67,12 @@ display_version()
     exit(0);
 }
 
-// Spawns a shell command and returns it's output
+/* safely spawns a shell command and returns it's output
+   currently not used for anything, could be used like so:
+       char *curtime = SHCMD("date +'%I:%M%P'");
+       char *kernel  = SHCMD("uname -r");
+       char *whoami  = SHCMD("whoami");
+*/
 char *
 SHCMD(char *cmd)
 {
@@ -85,6 +90,12 @@ SHCMD(char *cmd)
 	return output;
 }
 
+/* Reads UPDATE_FILE to retrieve number of pacman updates.
+   UPDATE_FILE is written to by a shell script executed every
+   10 minutes by a cron job. the script has the following in it:
+       pacman -Sy
+	   pacman -Qu | wc -l > $HOME/log/updates.log
+*/ 
 char *
 get_updates()
 {
@@ -102,6 +113,9 @@ get_updates()
 	return output;
 }
 
+/* polls the mixer specified by VOL_CH to retrieve current
+   system volume, requires alsa-lib
+*/
 char *
 get_vol(snd_mixer_t *handle, snd_mixer_elem_t *elem) {
 	int mute = 0;
@@ -115,7 +129,7 @@ get_vol(snd_mixer_t *handle, snd_mixer_elem_t *elem) {
 	return smprintf(mute == 0 ? VOL_MUTE : VOL, (vol * 100) / max);
 }
 
-// returns current system time
+// returns current system time in the format specified by CLK
 char *
 current_time()
 {
@@ -129,7 +143,7 @@ current_time()
 }
 
 
-// returns kernel version number
+// returns kernel version number, same as 'uname -r'
 char *
 kernel_version()
 {
@@ -145,9 +159,11 @@ kernel_version()
     return output;
 }
 
+// does the actual printing of the status
 void
 print_status()
 {
+	// set up the alsa mixer
 	snd_mixer_t* handle;
 	snd_mixer_elem_t* elem;
 	snd_mixer_selem_id_t* vol_info;
@@ -159,6 +175,7 @@ print_status()
 	snd_mixer_selem_id_malloc(&vol_info);
 	snd_mixer_selem_id_set_name(vol_info, VOL_CH);
 	elem = snd_mixer_find_selem(handle, vol_info);
+	// if there was an error opening the mixer, report it
 	if(elem == NULL)
 	{
 		fprintf(stderr, "dwmst: can not open device.\n");
@@ -167,34 +184,30 @@ print_status()
 		exit(EXIT_FAILURE);
 	}
 
-	struct utsname retval;
-	uname(&retval);
-
+	// status loop, executed [interval] seconds
 	for(;;sleep(interval))
 	{
-		char *updates = get_updates();
-		char *kernel  = kernel_version();
-	
 		//print status
-		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", kernel);
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", updates);
+		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", kernel_version());
+		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", get_updates());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol(handle, elem));
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", current_time());
 		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,/home/komrade/etc/dwm/menu.sh) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
 		fflush(stdout);
-	
-		// remember to deallocate any memory that was allocated
-		free(updates);
-		free(kernel);
 
+		/* if it was specified to only run once (using the '-o' option)
+		   then exit this loop now
+		*/
 		if (run_once)
 			break;
 	}
 
+	// clean up the alsa mixer
 	snd_mixer_selem_id_free(vol_info);
 	snd_mixer_close(handle);
 }
 
+// main function, all argument handling is done here
 int 
 main(int argc, char *argv[])
 {
