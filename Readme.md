@@ -17,7 +17,7 @@ Information Displayed
 - Number of pacman updates (AUR not included)
 - Current volume percentage
 - Current time (AM/PM)
-- "Root menu"
+- dwm icon
 
 All areas perform an action when clicked. For example - clicking the number of package updates will diplay a list of all packages needing updates, their current version, and the version they are being updated to. All this is displayed in a pop-up, static dzen that is killed when it is clicked (so these pop-ups only use CPU/MEM before they display themselves).
 The clickable areas include:
@@ -27,4 +27,19 @@ The clickable areas include:
 - Clicking time: displays a dzen calendar with current day and holidays highlighted
 - Clicking dwm icon: displays a dzen menu with a list of applications
 
-[dwmstbar]: dwmst.png
+![Screenshot of calendar][calendar] ![Screenshot of sysinfo][sysinfo]
+
+Usage
+-----
+usage: dwmst [OPTION]
+  -h,       display this help and exit
+  -v,       display version information and exit
+  -o,       run once and exit, turned off by default (useful for debug)
+  -i <arg>, set the interval (in seconds) of how often dwmst should refresh
+            by default there is 1 second between updates.
+
+
+
+[dwmstbar]: images/dwmst.png
+[calendar]: images/calendar.png
+[sysinfo]: images/sysinfo.png
