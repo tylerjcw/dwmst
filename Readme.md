@@ -26,6 +26,7 @@ The clickable areas include:
 - Clicking volume: spawns pavucontrol
 - Clicking time: displays a dzen calendar with current day and holidays highlighted
 - Clicking dwm icon: displays a dzen menu with a list of applications
+
 Note that none of these scripts are included in this repo (pavucontrol is th only one that might work on your system). If you want the clickable areas to do something you will have to modify dwmst.c and replace the path of my scripts with the path of yours.
 
 ![Screenshot of calendar][calendar]
@@ -41,6 +42,7 @@ Usage
 
 dwmst only outputs formatted text on stdout, nothing more. It is up to you to decide what to do with it. I have the output formatted for dzen2, so to display my bar i have something like this to my .xinitrc:
 	dwmst | dzen2 -x 656 -y 742 -fg '#dcdcdc' -bg '#303030' -h 26 -w 367 -ta r -fn '-*-bitocra-*-*-*-*-*-*-*-*-*-*-*-*' &
+
 you could just as easily reformat the output to be more friendly with any other bar that accepts input on stdin. 
 
 [dwmstbar]: images/dwmst.png
