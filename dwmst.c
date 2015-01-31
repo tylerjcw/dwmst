@@ -7,11 +7,14 @@
 #include <sys/utsname.h>
 #include <alsa/asoundlib.h>
 
-#define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%d%%"
-#define VOL         "^fg(#6095C5)^fn(stlarch)^fn()^fg()%d%%"
+#define CLK         "%I:%M%P" 									 // Format string for time
+#define NO_CLK      "Unable"  									 // Format string when unable to get time (should rarely/never see)
+#define KERNEL      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%s"      // Kernel version format string
+#define PAC_UPDS    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%i"      // Format string when there ARE updates
+#define PAC_NONE    "^fg(#6095C5)^fn(stlarch)^fn()^fg()%i"      // Format string for NO updates
+#define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%d%%"    // Format string for MUTED volume
+#define VOL         "^fg(#6095C5)^fn(stlarch)^fn()^fg()%d%%"    // Format string for NON_MUTED volume
 #define VOL_CH      "Console"
-#define CLK         "%I:%M%P"
-#define NO_CLK      "Unable"
 #define UPDATE_FILE "/home/komrade/log/updates.log"
 
 // controls how fast dwmst will update in seconds
@@ -100,17 +103,19 @@ char *
 get_updates()
 {
 	FILE* infile = fopen(UPDATE_FILE, "r");
-	char updates[4];
-	fscanf(infile, "%[^\n]", updates);
+	//char updates[4];
+	int number;
+	//fscanf(infile, "%[^\n]", updates);
+	fscanf(infile, "%i", &number);
 	fclose(infile);
 
-	int sz = strlen(updates);
-	char *output = malloc(sz);
-	memset(output, 0, sizeof(output));
-	strncpy(output, updates, sz);
-	strstr(output, "\n");
+	//int sz = strlen(updates);
+	//char *output = malloc(sz);
+	//memset(output, 0, sizeof(output));
+	//strncpy(output, updates, sz);
+	//strstr(output, "\n");
 
-	return output;
+	return smprintf(number == 0 ? PAC_NONE : PAC_UPDS, number);
 }
 
 /* polls the mixer specified by VOL_CH to retrieve current
@@ -150,13 +155,14 @@ kernel_version()
 	struct utsname retval;
 	uname(&retval);
 	
-	int sz = strlen(retval.release) + 1;
-	char *output = malloc(sz);
-	memset(output, 0, sizeof(output));
-	strncpy(output, retval.release, sz);
-	strstr(output, "\n");
+	//int sz = strlen(retval.release) + 1;
+	//char *output = malloc(sz);
+	//memset(output, 0, sizeof(output));
+	//strncpy(output, retval.release, sz);
+	//strstr(output, "\n");
 
-    return output;
+    //return output;
+    return smprintf(KERNEL, retval.release);
 }
 
 // does the actual printing of the status
@@ -188,10 +194,10 @@ print_status()
 	for(;;sleep(interval))
 	{
 		//print status
-		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", kernel_version());
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", get_updates());
+		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)%s ^ca()", kernel_version());
+		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh) %s ^ca()", get_updates());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol(handle, elem));
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh)^fg(#6095C5) ^fn(stlarch)^fn()^fg()%s ^ca()", current_time());
+		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh) ^fg(#6095C5)^fn(stlarch)^fn()^fg()%s ^ca()", current_time());
 		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,/home/komrade/etc/dwm/menu.sh) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
 		fflush(stdout);
 
