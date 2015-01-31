@@ -49,7 +49,7 @@ display_usage()
     printf("  -v,       display version information and exit\n");
     printf("  -o,       run once and exit, turned off by default (useful for debug)\n");
     printf("  -i <arg>, set the interval (in seconds) of how often dwmst should refresh\n");
-    printf("            by default there is no delay between updates.");
+    printf("            by default there is 1 second between updates.");
     exit(0);
 }
 
