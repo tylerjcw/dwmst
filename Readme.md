@@ -31,11 +31,12 @@ The clickable areas include:
 
 Usage
 -----
-usage: dwmst [OPTION]
-- -h,       display this help and exit
-- -v,       display version information and exit
-- -o,       run once and exit, turned off by default (useful for debug)
-- -i <arg>, set the interval (in seconds) of how often dwmst should refresh. by default there is 1 second between updates.
+	usage: dwmst [OPTION]
+		-h,       display this help and exit
+		-v,       display version information and exit
+		-o,       run once and exit, turned off by default (useful for debug)
+		-i <arg>, set the interval (in seconds) of how often dwmst should refresh
+				  by default there is 1 second between updates.
 
 
 
