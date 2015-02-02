@@ -14,8 +14,8 @@
 #define PAC_UPDS    "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()%2i"      // Format string when there ARE updates
 #define PAC_NONE    "^fg(#6095C5)^fn(stlarch)^fn()^fg()%2i"      // Format string for NO updates
 #define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for volume < 25%
-#define VOL_25      "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 25% <= volume < 50%
-#define VOL_50      "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 50% <= volume < 75%
+#define VOL_25      "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 25% <= volume < 50%
+#define VOL_50      "^fg(#6D9E3F)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 50% <= volume < 75%
 #define VOL_75      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 75% <= volume <= 100%
 #define VOL_CH      "Console"
 #define UPDATE_FILE "/home/komrade/log/updates.log"
