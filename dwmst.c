@@ -18,8 +18,6 @@
 #define VOL_50      "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 50% <= volume < 75%
 #define VOL_75      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 75% <= volume <= 100%
 #define VOL_CH      "Console"
-#define LIGHT_ON    "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()"
-#define LIGHT_OFF   "^fg(#6095C5)^fn(stlarch)^fn()^fg()"
 #define UPDATE_FILE "/home/komrade/log/updates.log"
 
 // controls how fast dwmst will update in seconds
