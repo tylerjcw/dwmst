@@ -1,20 +1,25 @@
 #include <time.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <sys/utsname.h>
-#include <alsa/asoundlib.h>
 
-#define CLK         "%I:%M%P" 									 // Format string for time
-#define NO_CLK      "Unable"  									 // Format string when unable to get time (should rarely/never see)
-#define KERNEL      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%s"      // Kernel version format string
-#define PAC_UPDS    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%i"      // Format string when there ARE updates
-#define PAC_NONE    "^fg(#6095C5)^fn(stlarch)^fn()^fg()%i"      // Format string for NO updates
-#define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%d%%"    // Format string for MUTED volume
-#define VOL         "^fg(#6095C5)^fn(stlarch)^fn()^fg()%d%%"    // Format string for NON_MUTED volume
+#define CLK         "%I:%M%P" 									  // Format string for time
+#define NO_CLK      "Unable"  								      // Format string when unable to get time (should rarely/never see)
+#define KERNEL      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%s"       // Kernel version format string
+#define PAC_UPDS    "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()%2i"      // Format string when there ARE updates
+#define PAC_NONE    "^fg(#6095C5)^fn(stlarch)^fn()^fg()%2i"      // Format string for NO updates
+#define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for volume < 25%
+#define VOL_25      "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 25% <= volume < 50%
+#define VOL_50      "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 50% <= volume < 75%
+#define VOL_75      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 75% <= volume <= 100%
 #define VOL_CH      "Console"
+#define LIGHT_ON    "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()"
+#define LIGHT_OFF   "^fg(#6095C5)^fn(stlarch)^fn()^fg()"
 #define UPDATE_FILE "/home/komrade/log/updates.log"
 
 // controls how fast dwmst will update in seconds
@@ -112,16 +117,27 @@ get_updates()
    system volume, requires alsa-lib
 */
 char *
-get_vol(snd_mixer_t *handle, snd_mixer_elem_t *elem) {
-	int mute = 0;
-	long vol, max, min;
+get_vol()
+{
+	FILE* infile = fopen("/proc/acpi/ibm/volume", "r");
+	int number;
+	char *mute = malloc(3);
+	fscanf(infile, "level:%i", &number);
+	fscanf(infile, "mute:%s", mute);
+	fclose(infile);
 
-	snd_mixer_handle_events(handle);
-	snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
-	snd_mixer_selem_get_playback_volume(elem, 0, &vol);
-	snd_mixer_selem_get_playback_switch(elem, 0, &mute);
+	int volume = round((number*100)/14);
+	
+	if (volume <= 24)
+		return smprintf(VOL_MUTE, volume);
+	else if ((volume >=25) && (volume <= 49))
+		return smprintf(VOL_25, volume);
+	else if ((volume >= 50) && (volume <= 74))
+		return smprintf(VOL_50, volume);
+	else if (volume >= 75)
+		return smprintf(VOL_75, volume);
 
-	return smprintf(mute == 0 ? VOL_MUTE : VOL, (vol * 100) / max);
+	return "Unable";
 }
 
 // returns current system time in the format specified by CLK
@@ -154,36 +170,15 @@ print_status()
 {
 	int times_ran = 0;
 
-	// set up the alsa mixer
-	snd_mixer_t* handle;
-	snd_mixer_elem_t* elem;
-	snd_mixer_selem_id_t* vol_info;
-
-	snd_mixer_open(&handle, 0);
-	snd_mixer_attach(handle, "default");
-	snd_mixer_selem_register(handle, NULL, NULL);
-	snd_mixer_load(handle);
-	snd_mixer_selem_id_malloc(&vol_info);
-	snd_mixer_selem_id_set_name(vol_info, VOL_CH);
-	elem = snd_mixer_find_selem(handle, vol_info);
-	// if there was an error opening the mixer, report it
-	if(elem == NULL)
-	{
-		fprintf(stderr, "dwmst: can not open device.\n");
-		snd_mixer_selem_id_free(vol_info);
-		snd_mixer_close(handle);
-		exit(EXIT_FAILURE);
-	}
-
 	// status loop, executed [interval] seconds
 	while (true)
 	{
 		//print status
 		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)%s ^ca()", get_kernel());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh) %s ^ca()", get_updates());
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol(handle, elem));
+		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol());
 		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh) ^fg(#6095C5)^fn(stlarch)^fn()^fg()%s ^ca()", get_time());
-		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,/home/komrade/etc/dwm/menu.sh) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
+		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,tpl -t) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
 		fflush(stdout);
 
 		/* increment the number of times the loop has ran by 1, if
@@ -197,10 +192,6 @@ print_status()
 		else
 			sleep(interval);
 	}
-
-	// clean up the alsa mixer
-	snd_mixer_selem_id_free(vol_info);
-	snd_mixer_close(handle);
 }
 
 // main function, all argument handling is done here
@@ -209,7 +200,7 @@ main(int argc, char *argv[])
 {
 	int c;
 
-	if ((c = getopt(argc, argv, "hvr:i:")) != 4)
+	if ((c = getopt(argc, argv, "hvr:i:t")) != 4)
 	{
 		switch( c )
 		{

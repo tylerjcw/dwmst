@@ -3,7 +3,7 @@ CC         = gcc
 PREFIX    ?= ${HOME}
 BINPREFIX  = ${PREFIX}/bin
 
-LIBS     = -lasound
+LIBS     = -lm
 CFLAGS   += -Wall -Wextra
 
 ${PROG}: ${PROG}.c
