@@ -14,7 +14,7 @@ dwmst is a status line program for DWM (although it could really be used with an
 Installation
 ------------
 The following dependencies are required to compile this:
-- alsa-lib
+- tp-smapi : ThinkPad /proc filesystem support, used for volume info
 
 To build and install this program run this in the directory you cloned the repository to:
 
@@ -48,7 +48,8 @@ Usage
 	usage: dwmst [OPTION]
 		-h,       display this help and exit
 		-v,       display version information and exit
-		-o,       run once and exit, turned off by default (useful for debug)
+		-r <int>, run int amount of times and exit, turned off by default
+		          this argument must be an int > 0 (useful for debug)
 		-i <arg>, set the interval (in seconds) of how often dwmst should refresh
 				  by default there is 1 second between updates.
 
