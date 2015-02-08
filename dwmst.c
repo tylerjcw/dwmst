@@ -199,6 +199,8 @@ print_status()
 		else
 			sleep(interval);
 	}
+
+	pclose(bar);
 }
 
 // main function, all argument handling is done here
