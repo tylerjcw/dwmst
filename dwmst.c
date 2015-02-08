@@ -63,8 +63,7 @@ void
 display_version()
 {
     printf("dwmst 1.31 - A utility to feed info to a status bar\n");
-    printf("Copyright (c) 2015, Tyler C-W\n");
-    printf("License - WTFPL, Just do What the Fuck You Want\n");
+    printf("2015, Tyler C-W\n");
     exit(0);
 }
 
