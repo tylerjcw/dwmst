@@ -14,8 +14,9 @@
 // change this to set default, otherwise use 'dwmst -i <seconds>'
 double interval = 1;
 
-// if true, runs once and exits. If you want to change the default behavior,
-// change this here, otherwise use 'dwmst -o'
+// runs this amount of times and exits. If you want to change the default behavior
+// change this here, otherwise use 'dwmst -r <int>'
+// set to a negative int to run infinitely (default)
 long int run_times = -1;
 
 // used to safely return strings in a formatted manner
@@ -61,7 +62,7 @@ display_usage()
 void
 display_version()
 {
-    printf("dwmst 1.3 - A utility to feed info to a status bar\n");
+    printf("dwmst 1.31 - A utility to feed info to a status bar\n");
     printf("Copyright (c) 2015, Tyler C-W\n");
     printf("License - WTFPL, Just do What the Fuck You Want\n");
     exit(0);
@@ -120,21 +121,21 @@ get_vol()
 	
 	if( strncmp(mute, "off", 3) == 0 )
 	{
-		if (volume <= 24)
+		if (volume < 25)
 			return smprintf(VOL_25, volume);
-		else if ((volume >=25) && (volume <= 49))
+		else if ((volume >= 25) && (volume < 50))
 			return smprintf(VOL_50, volume);
-		else if ((volume >= 50) && (volume <= 74))
+		else if ((volume >= 50) && (volume < 75))
 			return smprintf(VOL_75, volume);
 		else if (volume >= 75)
 			return smprintf(VOL_100, volume);
 	}
-	else // mute == "off"
+	else // volume is muted
 	{
 		return smprintf(VOL_MUTE);
 	}
 
-	return "Unable";
+	return "Unable"; // unable to get volume level from /proc
 }
 
 // returns current system time in the format specified by CLK
@@ -151,7 +152,7 @@ get_time()
 }
 
 
-// returns kernel version number, same as 'uname -r'
+// returns kernel release number, same as 'uname -r'
 char *
 get_kernel()
 {
@@ -187,7 +188,7 @@ print_status()
 
 		/* increment the number of times the loop has ran by 1, if
 		   this value is exactly equal to the specified number of times to run
-		   (default is -1, or infinite times) then break the loop. If it is not, then
+		   (default is -1) then break the loop. If it is not, then
 		   sleep for the specified interval, and run the loop again
 		*/
 		times_ran++;
