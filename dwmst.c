@@ -8,17 +8,7 @@
 #include <stdbool.h>
 #include <sys/utsname.h>
 
-#define CLK         "%I:%M%P" 									  // Format string for time
-#define NO_CLK      "Unable"  								      // Format string when unable to get time (should rarely/never see)
-#define KERNEL      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%s"       // Kernel version format string
-#define PAC_UPDS    "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()%2i"      // Format string when there ARE updates
-#define PAC_NONE    "^fg(#6095C5)^fn(stlarch)^fn()^fg()%2i"      // Format string for NO updates
-#define VOL_MUTE    "^fg(#D370A3)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for volume < 25%
-#define VOL_25      "^fg(#EFBD8B)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 25% <= volume < 50%
-#define VOL_50      "^fg(#6D9E3F)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 50% <= volume < 75%
-#define VOL_75      "^fg(#6095C5)^fn(stlarch)^fn()^fg()%3i%%"    // Format string for 75% <= volume <= 100%
-#define VOL_CH      "Console"
-#define UPDATE_FILE "/home/komrade/log/updates.log"
+#include "config.h"
 
 // controls how fast dwmst will update in seconds
 // change this to set default, otherwise use 'dwmst -i <seconds>'
@@ -71,14 +61,15 @@ display_usage()
 void
 display_version()
 {
-    printf("dwmst 1.0 - A status line utility for DWM & dzen\n");
+    printf("dwmst 1.3 - A utility to feed info to a status bar\n");
     printf("Copyright (c) 2015, Tyler C-W\n");
     printf("License - WTFPL, Just do What the Fuck You Want\n");
     exit(0);
 }
 
 /* safely spawns a shell command and returns it's output.
-   currently not used for anything, could be used like so:
+   currently only used for volume (for getting mute state),
+   can be used like so:
        char *curtime = SHCMD("date +'%I:%M%P'");
        char *kernel  = SHCMD("uname -r");
        char *whoami  = SHCMD("whoami");
@@ -87,7 +78,7 @@ char *
 SHCMD(char *cmd)
 {
 	FILE* process = popen(cmd, "r");
-	char buffer[1000];
+	char buffer[1024];
 	fscanf(process, "%[^\n]", buffer);
 	pclose(process);
 
@@ -111,29 +102,37 @@ get_updates()
 	return smprintf(number == 0 ? PAC_NONE : PAC_UPDS, number);
 }
 
-/* polls the mixer specified by VOL_CH to retrieve current
-   system volume, requires alsa-lib
+/* reads current system volume from acpi,
+   configured to work with tp_smapi for ThinkPads.
+   only tested on an IBM ThinkPad T60
 */
 char *
 get_vol()
 {
+	char *mute = SHCMD("awk '/^mute/{print $2}' /proc/acpi/ibm/volume");
+
 	FILE* infile = fopen("/proc/acpi/ibm/volume", "r");
 	int number;
-	char *mute = malloc(3);
 	fscanf(infile, "level:%i", &number);
-	fscanf(infile, "mute:%s", mute);
 	fclose(infile);
 
 	int volume = round((number*100)/14);
 	
-	if (volume <= 24)
-		return smprintf(VOL_MUTE, volume);
-	else if ((volume >=25) && (volume <= 49))
-		return smprintf(VOL_25, volume);
-	else if ((volume >= 50) && (volume <= 74))
-		return smprintf(VOL_50, volume);
-	else if (volume >= 75)
-		return smprintf(VOL_75, volume);
+	if( strncmp(mute, "off", 3) == 0 )
+	{
+		if (volume <= 24)
+			return smprintf(VOL_25, volume);
+		else if ((volume >=25) && (volume <= 49))
+			return smprintf(VOL_50, volume);
+		else if ((volume >= 50) && (volume <= 74))
+			return smprintf(VOL_75, volume);
+		else if (volume >= 75)
+			return smprintf(VOL_100, volume);
+	}
+	else // mute == "off"
+	{
+		return smprintf(VOL_MUTE);
+	}
 
 	return "Unable";
 }
@@ -168,16 +167,23 @@ print_status()
 {
 	int times_ran = 0;
 
+	FILE* bar = popen(STATUS_BAR, "w");
+
 	// status loop, executed [interval] seconds
 	while (true)
 	{
 		//print status
-		printf("^ca(1,/home/komrade/etc/dwm/dzenSysinfo.sh)%s ^ca()", get_kernel());
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenPacman.sh) %s ^ca()", get_updates());
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,pavucontrol) %s ^ca()", get_vol());
-		printf("^fg(#686868)^r(2x19)^fg()^ca(1,/home/komrade/etc/dwm/dzenCal.sh) ^fg(#6095C5)^fn(stlarch)^fn()^fg()%s ^ca()", get_time());
-		printf("^fg(#686868)^r(2x19)^fg()^fg(#6095C5)^ca(1,tpl -t) ^i(/home/komrade/etc/dwm/icons/dwm.xbm)^fg() ^ca()\n");
-		fflush(stdout);
+		fprintf(bar, KERNEL_STRING, get_kernel());
+		fprintf(bar, SEPCHR_STRING);
+		fprintf(bar, UPDATE_STRING, get_updates());
+		fprintf(bar, SEPCHR_STRING);
+		fprintf(bar, VOLUME_STRING, get_vol());
+		fprintf(bar, SEPCHR_STRING);
+		fprintf(bar, PCTIME_STRING, get_time());
+		fprintf(bar, SEPCHR_STRING);
+		fprintf(bar, CMDBTN_STRING);
+		fprintf(bar, " \n");
+		fflush(bar);
 
 		/* increment the number of times the loop has ran by 1, if
 		   this value is exactly equal to the specified number of times to run
@@ -186,7 +192,10 @@ print_status()
 		*/
 		times_ran++;
 		if (times_ran == run_times)
+		{
+			pclose(bar);
 			break;
+		}
 		else
 			sleep(interval);
 	}
