@@ -37,7 +37,7 @@ The clickable areas include:
 - Clicking number of package updates: list of package updates
 - Clicking volume: spawns pavucontrol
 - Clicking time: displays a dzen calendar with current day and holidays highlighted
-- Clicking dwm icon: displays a dzen menu with a list of applications
+- Clicking dwm icon: toggles ThinkLight 
 
 Note that none of these scripts are included in this repo (pavucontrol is th only one that might work on your system). If you want the clickable areas to do something you will have to modify dwmst.c and replace the path of my scripts with the path of yours.
 
