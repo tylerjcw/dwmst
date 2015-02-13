@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <X11/Xlib.h>
 #include <sys/utsname.h>
 
 #include "config.h"
@@ -18,6 +19,9 @@ double interval = 1;
 // change this here, otherwise use 'dwmst -r <int>'
 // set to a negative int to run infinitely (default)
 long int run_times = -1;
+
+// opens the display to set root window name
+Display *display;
 
 // used to safely return strings in a formatted manner
 char *
@@ -83,6 +87,65 @@ SHCMD(char *cmd)
 	pclose(process);
 
 	return smprintf(buffer);
+}
+
+/* reads respective files for battery state (charging/discharging),
+   remaining percent, and if the battery is installed or not
+*/
+char *
+get_battery()
+{
+	// is the battery installed?
+	int installed;
+	FILE* infile = fopen("/sys/devices/platform/smapi/BAT0/installed", "r");
+	fscanf(infile, "%i", &installed);
+	fclose(infile);
+
+	printf("%i", installed);
+
+	if (installed == 1)
+	{
+		// get the remaining percentage
+		int percent;
+		infile = fopen("/sys/devices/platform/smapi/BAT0/remaining_percent", "r");
+		fscanf(infile, "%i", &percent);
+		fclose(infile);
+
+		// get battery status (charging/discharging)
+		char state[16];
+		infile = fopen("/sys/devices/platform/smapi/BAT0/state", "r");
+		fscanf(infile, "%s", state);
+		fclose(infile);
+
+		if ( strncmp(state, "discharging", 11) == 0)
+		{
+			if (percent < 25)
+				return smprintf(BAT_25, percent);
+			else if ((percent >= 25) && (percent < 50))
+				return smprintf(BAT_50, percent);
+			else if ((percent >= 50) && (percent < 75))
+				return smprintf(BAT_75, percent);
+			else if (percent >= 75)
+				return smprintf(BAT_100, percent);
+		}
+		else
+		{
+			if (percent < 25)
+				return smprintf(CRG_25, percent);
+			else if ((percent >= 25) && (percent < 50))
+				return smprintf(CRG_50, percent);
+			else if ((percent >= 50) && (percent < 75))
+				return smprintf(CRG_75, percent);
+			else if (percent >= 75)
+				return smprintf(CRG_100, percent);
+		}
+	}
+	else
+	{
+		return smprintf(AC_PWR);
+	}
+
+	return smprintf("error");
 }
 
 /* Reads UPDATE_FILE to retrieve number of pacman updates.
@@ -169,11 +232,17 @@ print_status()
 
 	FILE* bar = popen(STATUS_BAR, "w");
 
+	if (!(display = XOpenDisplay(NULL))) {
+        fprintf(stderr, "dwmst: cannot open display.\n");
+    }
+
 	// status loop, executed [interval] seconds
 	while (true)
 	{
 		//print status
 		fprintf(bar, KERNEL_STRING, get_kernel());
+		fprintf(bar, SEPCHR_STRING);
+		fprintf(bar, BATTRY_STRING, get_battery());
 		fprintf(bar, SEPCHR_STRING);
 		fprintf(bar, UPDATE_STRING, get_updates());
 		fprintf(bar, SEPCHR_STRING);
@@ -197,7 +266,9 @@ print_status()
 			break;
 		}
 		else
+		{
 			sleep(interval);
+		}
 	}
 
 	pclose(bar);
